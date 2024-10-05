@@ -1,20 +1,26 @@
 import socket
 import concurrent.futures
-from scapy.all import ICMP, IP, sr1
+from scapy.all import ICMP, IP, sr1, conf
 
 class PortScanner:
     def __init__(self, target, port_range=None, timeout=1):
         self.target = target
         self.port_range = port_range if port_range else (1, 65535)
         self.timeout = timeout
-    
-    
+
     def is_host_alive(self):
-       
-        # Try connecting to common ports to see if the host is alive
-        if self.tcp_connect_check_common_ports():
+        #ICMP
+        if self.icmp_ping_check():
             return True
-      
+        # TCP
+        return self.tcp_connect_check_common_ports()
+
+    def icmp_ping_check(self):
+        packet = IP(dst=self.target)/ICMP()
+        response = sr1(packet, timeout=self.timeout, verbose=False)
+        if response is not None:
+            # print(f"Host {self.target} is alive (ICMP response received).")
+            return True
         return False
 
     def tcp_connect_check_common_ports(self):
@@ -25,7 +31,7 @@ class PortScanner:
                 sock.settimeout(self.timeout)
                 result = sock.connect_ex((self.target, port))
                 if result == 0:
-                    print(f"Host {self.target} is alive (common port {port} is open).")
+                    # print(f"Host {self.target} is alive (common port {port} is open).")
                     return True
         return False
 
@@ -36,7 +42,8 @@ class PortScanner:
                 sock.settimeout(self.timeout)
                 result = sock.connect_ex((self.target, port))
                 return port, result == 0
-        except Exception:
+        except Exception as e:
+            print(f"Error scanning port {port} on {self.target}: {e}")
             return port, False
 
     def scan(self):
