@@ -6,6 +6,8 @@ from colorama import Fore
 import sys
 import os
 from contextlib import contextmanager
+from scanners.tcp_connect_scan import TcpConnectScan
+from scanners.syn_scan import SYNScanner
 
 @contextmanager
 def suppress_stderr():
@@ -19,10 +21,11 @@ def suppress_stderr():
             sys.stderr = old_stderr
 
 class NetworkDiscovery:
-    def __init__(self, subnet, port_range=None, timeout=1):
+    def __init__(self, subnet, port_range=None, timeout=1, scan_type=None):
         self.subnet = subnet
         self.port_range = port_range if port_range else (1, 65535)
         self.timeout = timeout
+        self.scan_type = scan_type
 
     def check_host_alive(self, ip_str):
         """Check if a single host is alive."""
@@ -37,18 +40,16 @@ class NetworkDiscovery:
         alive_hosts = []
         subnet_network = ipaddress.ip_network(self.subnet, strict=False)
 
-        print(f"[*] Scanning the {self.subnet} subnet for alive Hosts...")
+        print(f"[*] Scanning the {self.subnet} subnet for alive hosts...")
 
-        # Increase max_workers to speed up the scan
-        with ThreadPoolExecutor(max_workers=50) as executor:
+        with ThreadPoolExecutor(max_workers=150) as executor:
             future_to_ip = {executor.submit(self.check_host_alive, str(ip)): str(ip) for ip in subnet_network.hosts()}
 
             for future in as_completed(future_to_ip):
                 result = future.result()
                 if result:
-                    print(f"Host {result} is alive.")
+                    print(f"[+] Host {result} is alive.")
                     alive_hosts.append(result)
-
         return alive_hosts
 
     def scan_alive_hosts(self):
@@ -56,26 +57,32 @@ class NetworkDiscovery:
         alive_hosts = self.scan_subnet()
 
         if not alive_hosts:
-            print(Fore.RED + "No alive hosts found in the subnet.")
+            print(Fore.RED + "[-] No alive hosts found in the subnet.")
             return
 
-        print(Fore.YELLOW + f"\nScanning {len(alive_hosts)} alive hosts for open ports...")
+        print(Fore.YELLOW + f"\n[*] Scanning {len(alive_hosts)} alive hosts for open ports...")
 
-        # Prepare data for tabulation
         scan_results = []
 
-        # Scan each alive host for open ports
         for host in alive_hosts:
-            print(Fore.CYAN + f"\nScanning host {host}...")
-            scanner = PortScanner(target=host, port_range=self.port_range, timeout=self.timeout)
+            print(Fore.CYAN + f"\n[*] Scanning host {host}...")
+            
+            # Choose scan type (TCP Connect, SYN, or basic)
+            if self.scan_type == 'syn':
+                scanner = SYNScanner(target=host, port_range=self.port_range, timeout=self.timeout)
+            elif self.scan_type == 'tcp':
+                scanner = TcpConnectScan(target=host, port_range=self.port_range, timeout=self.timeout)
+            else:
+                scanner = PortScanner(target=host, port_range=self.port_range, timeout=self.timeout)
+            
             open_ports = scanner.scan()
 
             if open_ports:
-                scan_results.append([host, Fore.GREEN + ", ".join(map(str, open_ports))])  # Collecting results
-                print(Fore.GREEN + f"Host {host} has the following open ports: {open_ports}")
+                scan_results.append([host, Fore.GREEN + ", ".join(map(str, open_ports))])
+                print(Fore.GREEN + f"[*] Host {host} has the following open ports: {open_ports}")
             else:
-                scan_results.append([host, Fore.RED + "No open ports found"])  # Collecting results
-                print(Fore.RED + f"No open ports found on {host}.")
+                scan_results.append([host, Fore.RED + "No open ports found"])
+                print(Fore.RED + f"[-] No open ports found on {host}.")
 
         # Displaying results in a tabular format
         print(Fore.YELLOW + "\nScan Results:")
