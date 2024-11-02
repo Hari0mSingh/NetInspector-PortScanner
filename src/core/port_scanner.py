@@ -26,7 +26,7 @@ class PortScanner:
     def icmp_ping_check(self):
         """Perform an ICMP ping check."""
         try:
-            conf.verb = 0  # Suppress Scapy output
+            conf.verb = 0 
             packet = IP(dst=self.target) / ICMP()
             response = sr1(packet, timeout=self.timeout, verbose=False)
             if response and response.haslayer(ICMP):
@@ -43,7 +43,7 @@ class PortScanner:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                     sock.settimeout(self.timeout)
                     result = sock.connect_ex((self.target, port))
-                    if result == 0:  # If the port is open
+                    if result == 0:  
                         return True
             except socket.error as e:
                 print(f"[-] Error checking TCP port {port}: {e}")
