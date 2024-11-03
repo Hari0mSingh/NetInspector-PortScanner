@@ -10,8 +10,6 @@ class PortScanner:
         self.timeout = timeout
 
     def is_host_alive(self):
-        """Check if the host is alive using TCP and ICMP."""
-
         if self.tcp_connect_check_common_ports():
             print(f"[+] Host {self.target} is alive (TCP check).")
             return True
@@ -24,7 +22,6 @@ class PortScanner:
         return False
 
     def icmp_ping_check(self):
-        """Perform an ICMP ping check."""
         try:
             conf.verb = 0 
             packet = IP(dst=self.target) / ICMP()
@@ -36,7 +33,6 @@ class PortScanner:
         return False
 
     def tcp_connect_check_common_ports(self):
-        """Check TCP connection on common ports."""
         common_ports = [20, 21, 22, 23, 25, 53, 80, 110, 135, 139, 143, 443, 445, 3389]
         for port in common_ports:
             try:
@@ -50,7 +46,6 @@ class PortScanner:
         return False
 
     def tcp_connect_scan(self, port):
-        """Perform a TCP Connect scan on a specific port."""
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.settimeout(self.timeout)
@@ -61,7 +56,6 @@ class PortScanner:
             return port, False
 
     def scan(self):
-        """Scan the specified range of ports."""
         open_ports = []
         print(f"[*] Starting scan on {self.target} for ports {self.port_range[0]}-{self.port_range[1]}")
 

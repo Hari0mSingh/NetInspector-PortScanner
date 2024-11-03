@@ -14,7 +14,6 @@ class OSFingerprinter:
         self.ip_version = self._detect_ip_version()
 
     def _detect_ip_version(self):
-        """Detect if the target is IPv4 or IPv6."""
         try:
             ipaddress.IPv4Address(self.target)
             return 4
@@ -25,7 +24,8 @@ class OSFingerprinter:
             except ipaddress.AddressValueError:
                 raise ValueError("Invalid IP address")
 
-    def get_ttl_based_os(self):
+    def detect_os(self):
+        """Perform OS detection based on TTL."""
         try:
             if self.ip_version == 4:
                 icmp_packet = IP(dst=self.target) / ICMP()
@@ -36,7 +36,7 @@ class OSFingerprinter:
             if response:
                 ttl = response.ttl
                 os_type = self._map_ttl_to_os(ttl)
-                return {"ttl": ttl, "os": os_type}
+                return os_type
             else:
                 return {"error": "No response received for OS fingerprinting."}
         except Exception as e:

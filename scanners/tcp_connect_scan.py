@@ -15,14 +15,12 @@ class TcpConnectScan:
         return self.scanner.is_host_alive() 
 
     def tcp_connect_scan(self, port):
-        """Perform a TCP Connect scan on a single port."""
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.settimeout(self.timeout)
             result = sock.connect_ex((self.target, port))
             return port, result == 0 
 
     def scan(self):
-        """Perform a TCP Connect Scan on the specified range of ports."""
         open_ports = []
 
         if not self.is_host_alive():
