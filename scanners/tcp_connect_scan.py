@@ -27,7 +27,7 @@ class TcpConnectScan:
             print(f"[-] Host {self.target} is not alive or unreachable.")
             return open_ports  
 
-        print(f"[+] Host {self.target} is alive, starting TCP Connect Scan...")
+        print(f"[+] Starting TCP Connect Scan on {self.target}...")
         
         with ThreadPoolExecutor(max_workers=100) as executor:
             futures = {executor.submit(self.tcp_connect_scan, port): port for port in range(self.port_range[0], self.port_range[1] + 1)}

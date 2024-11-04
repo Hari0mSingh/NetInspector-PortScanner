@@ -58,7 +58,7 @@ class NetworkDiscovery:
             print(Fore.RED + "[-] No alive hosts found in the subnet.")
             return
 
-        all_results = []
+        all_results = {}
         for host in alive_hosts:
             scanner = None
             if self.scan_type == 'syn':
@@ -70,13 +70,15 @@ class NetworkDiscovery:
 
             open_ports = scanner.scan()
 
-            for port in open_ports:
-                service_info = {}
-                if self.service_version:
-                    service_identifier = ServiceIdentifier(target=host, timeout=self.timeout)
-                    service_info = service_identifier.identify_service(port)
-                all_results.append([host, port, service_info.get('banner', 'Unknown'), service_info.get('banner', 'N/A')])
+            # Group open ports by host
+            all_results[host] = open_ports
 
-        table_headers = [Fore.BLUE + "Host", "Port", "Service", "Version"]
-        table_output = tabulate(all_results, headers=table_headers, tablefmt="fancy_grid")
+        # Prepare data for tabulation
+        table_data = []
+        for host, ports in all_results.items():
+            for port in ports:
+                table_data.append([host, port])
+
+        table_headers = [Fore.BLUE + "Host", "Port"]
+        table_output = tabulate(table_data, headers=table_headers, tablefmt="fancy_grid")
         print(table_output)

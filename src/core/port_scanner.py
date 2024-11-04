@@ -11,11 +11,9 @@ class PortScanner:
 
     def is_host_alive(self):
         if self.tcp_connect_check_common_ports():
-            print(f"[+] Host {self.target} is alive (TCP check).")
             return True
 
         if self.icmp_ping_check():
-            print(f"[+] Host {self.target} is alive (ICMP ping check).")
             return True
 
         print(f"[-] Host {self.target} is not alive or unreachable.")
