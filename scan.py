@@ -233,7 +233,7 @@ def cli(target, ports, timeout, scan_type, service_version, os_detection, output
         TimeRemainingColumn(),
         console=console,
     ) as progress:
-        progress.add_task(f"[cyan]Host {target_ip} is alive...", total=None)
+        progress.add_task(f"[cyan]Host {target_ip} is alive ?", total=None)
         if not scan_instance.is_host_alive():
             console.print(f"\n[red]Host {target_ip} is not responding. Aborting scan.[/red]")
             return

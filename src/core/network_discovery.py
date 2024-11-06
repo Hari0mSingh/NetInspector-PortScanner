@@ -70,10 +70,8 @@ class NetworkDiscovery:
 
             open_ports = scanner.scan()
 
-            # Group open ports by host
             all_results[host] = open_ports
 
-        # Prepare data for tabulation
         table_data = []
         for host, ports in all_results.items():
             for port in ports:
